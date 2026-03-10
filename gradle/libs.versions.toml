@@ -1,24 +1,26 @@
 [versions]
-agp = "8.4.2"
-kotlin = "2.0.21"
+agp = "8.7.3"
+kotlin = "2.1.0"
 composeBom = "2024.11.00"
-hilt = "2.52"
-ksp = "2.0.21-1.0.28"
+hilt = "2.54"
+ksp = "2.1.0-1.0.29"
 retrofit = "2.11.0"
 okhttp = "4.12.0"
-coroutines = "1.9.0"
-navigationCompose = "2.8.4"
+coroutines = "1.10.1"
+navigationCompose = "2.8.5"
 datastorePreferences = "1.1.1"
 kotlinxSerialization = "1.7.3"
 lifecycle = "2.8.7"
 activityCompose = "1.9.3"
 hiltNavigationCompose = "1.2.0"
 coreKtx = "1.15.0"
+material = "1.12.0"
 
 [libraries]
 # Core
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
+material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 
 # Compose BOM
 compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }

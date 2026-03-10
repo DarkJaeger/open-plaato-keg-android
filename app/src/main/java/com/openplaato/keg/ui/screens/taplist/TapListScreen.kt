@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -114,7 +115,7 @@ fun TapListScreen(
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
-                        contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                        contentPadding = PaddingValues(
                             horizontal = 16.dp, vertical = 16.dp
                         ),
                     ) {
@@ -203,7 +204,7 @@ fun TapCard(item: TapWithKeg, onEdit: () -> Unit) {
                 Spacer(Modifier.height(12.dp))
 
                 // Volume
-                Row(verticalAlignment = Alignment.Baseline) {
+                Row(verticalAlignment = Alignment.Bottom) {
                     Text(
                         text = "%.2f".format(item.amountLeft),
                         fontSize = 36.sp,
@@ -216,6 +217,7 @@ fun TapCard(item: TapWithKeg, onEdit: () -> Unit) {
                         text = item.volumeUnit,
                         style = MaterialTheme.typography.titleMedium,
                         color = OnSurfaceMuted,
+                        modifier = Modifier.padding(bottom = 4.dp)
                     )
                 }
 

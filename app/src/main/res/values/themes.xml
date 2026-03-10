@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.OpenPlaatoKeg" parent="android:Theme.Material.NoTitleBar" />
+    <style name="Theme.OpenPlaatoKeg" parent="Theme.Material3.DayNight.NoActionBar" />
 </resources>
