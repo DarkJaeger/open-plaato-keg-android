@@ -3,6 +3,7 @@ package com.openplaato.keg.ui.navigation
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocalBar
 import androidx.compose.material.icons.filled.Opacity
+import androidx.compose.material.icons.filled.Scale
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.WineBar
 import androidx.compose.material3.Icon
@@ -17,6 +18,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 
 sealed class Screen(val route: String, val label: String, val icon: ImageVector) {
     data object TapList : Screen("taplist", "Taps", Icons.Default.LocalBar)
+    data object Scales : Screen("scales", "Scales", Icons.Default.Scale)
     data object Airlocks : Screen("airlocks", "Airlocks", Icons.Default.Opacity)
     data object Beverages : Screen("beverages", "Beverages", Icons.Default.WineBar)
     data object Settings : Screen("settings", "Settings", Icons.Default.Settings)
@@ -32,9 +34,21 @@ sealed class Screen(val route: String, val label: String, val icon: ImageVector)
         const val ARG = "bevId"
     }
     data object NewBeverage : Screen("beverage/new", "New Beverage", Icons.Default.WineBar)
+    data object ScaleConfig : Screen("scaleconfig/{kegId}", "Scale Config", Icons.Default.Scale) {
+        fun route(kegId: String) = "scaleconfig/$kegId"
+        const val ARG = "kegId"
+    }
+    data object AirlockSetup : Screen("airlocksetup", "Airlock Setup", Icons.Default.Opacity)
+    data object BrewfatherBatches : Screen("brewfather/batches", "Brewfather Batches", Icons.Default.WineBar)
 }
 
-val bottomNavScreens = listOf(Screen.TapList, Screen.Airlocks, Screen.Beverages, Screen.Settings)
+val bottomNavScreens = listOf(
+    Screen.TapList,
+    Screen.Scales,
+    Screen.Airlocks,
+    Screen.Beverages,
+    Screen.Settings,
+)
 
 @Composable
 fun BottomNavBar(navController: NavController) {

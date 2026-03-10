@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class Keg(
     val id: String = "",
+    // Live readings
     val amount_left: Double? = null,
     val percent_of_beer_left: Double? = null,
     val keg_temperature: Double? = null,
@@ -12,7 +13,17 @@ data class Keg(
     val beer_left_unit: String? = "litre",
     val is_pouring: String? = "0",
     val last_pour: Double? = null,
+    val weight_raw: String? = null,
+    // User labels
     val my_label: String? = null,
+    // Hardware config (stored as strings by the server)
+    val unit: String? = null,            // "1"=metric, "2"=US
+    val measure_unit: String? = null,    // "1"=weight, "2"=volume
+    val sensitivity: String? = null,     // "1"–"4"
+    val empty_keg_weight: String? = null,
+    val max_keg_volume: String? = null,
+    val temperature_offset: String? = null,
+    val keg_mode: String? = null,        // "1"=beer, "2"=co2
 )
 
 /** Merged view of a Tap + its live Keg data for the list screen. */

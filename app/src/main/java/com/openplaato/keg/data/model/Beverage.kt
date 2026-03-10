@@ -32,3 +32,42 @@ data class StatusResponse(
 
 @Serializable
 data class ValueBody(val value: String)
+
+@Serializable
+data class AppConfigResponse(val airlock_enabled: Boolean = true)
+
+@Serializable
+data class AirlockEnabledBody(val enabled: Boolean)
+
+@Serializable
+data class BrewfatherConfigResponse(val configured: Boolean = false)
+
+@Serializable
+data class BrewfatherCredsBody(val user_id: String, val api_key: String)
+
+@Serializable
+data class BrewfatherBatch(
+    val id: String = "",
+    val name: String = "",
+    val style: String = "",
+    val abv: Double? = null,
+    val status: String = "",
+)
+
+@Serializable
+data class GrainfatherBody(
+    val enabled: Boolean,
+    val unit: String = "celsius",
+    val specific_gravity: String = "1.0",
+    val url: String = "",
+)
+
+@Serializable
+data class BrewfatherBody(
+    val enabled: Boolean,
+    val unit: String = "celsius",
+    val specific_gravity: String = "1.0",
+    val url: String = "",
+    val og: String? = null,
+    val batch_volume: String? = null,
+)

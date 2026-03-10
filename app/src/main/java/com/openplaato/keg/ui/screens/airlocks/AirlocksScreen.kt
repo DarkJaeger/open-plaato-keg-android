@@ -84,6 +84,19 @@ fun AirlocksScreen(
                         CircularProgressIndicator(color = Amber500)
                     }
                 }
+                !state.airlockEnabled -> {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("Airlocks disabled", color = OnSurfaceMuted)
+                            Text(
+                                "Enable in Settings",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = OnSurfaceMuted,
+                                modifier = Modifier.padding(top = 4.dp),
+                            )
+                        }
+                    }
+                }
                 state.airlocks.isEmpty() -> {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text("No airlocks connected", color = OnSurfaceMuted)
