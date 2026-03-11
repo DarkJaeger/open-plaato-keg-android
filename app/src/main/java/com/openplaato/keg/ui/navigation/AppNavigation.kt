@@ -13,6 +13,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 
@@ -20,7 +22,7 @@ sealed class Screen(val route: String, val label: String, val icon: ImageVector)
     data object TapList : Screen("taplist", "Taps", Icons.Default.LocalBar)
     data object Scales : Screen("scales", "Scales", Icons.Default.Scale)
     data object Airlocks : Screen("airlocks", "Airlocks", Icons.Default.Opacity)
-    data object Beverages : Screen("beverages", "Beverages", Icons.Default.WineBar)
+    data object Beverages : Screen("beverages", "Drinks", Icons.Default.WineBar)
     data object Settings : Screen("settings", "Settings", Icons.Default.Settings)
 
     // Detail screens (not in bottom nav)
@@ -67,7 +69,15 @@ fun BottomNavBar(navController: NavController) {
                     }
                 },
                 icon = { Icon(screen.icon, contentDescription = screen.label) },
-                label = { Text(screen.label) },
+                label = {
+                    Text(
+                        text = screen.label,
+                        fontSize = 10.sp,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                },
             )
         }
     }

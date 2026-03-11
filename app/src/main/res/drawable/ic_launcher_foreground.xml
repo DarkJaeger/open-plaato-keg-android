@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Adaptive icon foreground: beer mug with foam
+  Canvas: 108x108dp, safe zone: 18–90 (centre 72dp circle)
+  Drawing order: foam circles first, then mug body (covers foam bottoms), then handle
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Foam bubble – left -->
+    <path
+        android:fillColor="#1A1A2E"
+        android:pathData="M 32,48 m -9,0 a 9,9 0 1,0 18,0 a 9,9 0 1,0 -18,0" />
+
+    <!-- Foam bubble – centre (slightly higher and larger) -->
+    <path
+        android:fillColor="#1A1A2E"
+        android:pathData="M 47,44 m -10,0 a 10,10 0 1,0 20,0 a 10,10 0 1,0 -20,0" />
+
+    <!-- Foam bubble – right -->
+    <path
+        android:fillColor="#1A1A2E"
+        android:pathData="M 62,48 m -9,0 a 9,9 0 1,0 18,0 a 9,9 0 1,0 -18,0" />
+
+    <!-- Mug body (covers lower halves of foam bubbles, leaving tops as foam) -->
+    <path
+        android:fillColor="#1A1A2E"
+        android:pathData="M 22,52 H 72 V 86 Q 72,90 68,90 H 26 Q 22,90 22,86 Z" />
+
+    <!-- Handle (D-shape loop on right side) -->
+    <path
+        android:fillColor="#1A1A2E"
+        android:pathData="M 72,62 C 87,62 87,80 72,80 L 72,74 C 81,74 81,68 72,68 Z" />
+
+</vector>
