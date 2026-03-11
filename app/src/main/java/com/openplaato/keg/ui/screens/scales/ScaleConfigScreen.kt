@@ -99,7 +99,9 @@ fun ScaleConfigScreen(
             item {
                 SectionCard(title = "Live Readings") {
                     keg?.let { k ->
-                        ReadingRow("Volume", "${k.amount_left?.let { "%.2f".format(it) } ?: "—"} ${when(k.beer_left_unit){"litre"->"L"; else -> k.beer_left_unit ?: ""}}")
+                        val amountLabel = if (k.measure_unit == "1") "Weight" else "Volume"
+                        val amountUnit = when (k.beer_left_unit) { "litre" -> "L"; else -> k.beer_left_unit ?: "" }
+                        ReadingRow(amountLabel, "${k.amount_left?.let { "%.2f".format(it) } ?: "—"} $amountUnit")
                         ReadingRow("Remaining", "${k.percent_of_beer_left?.let { "%.1f".format(it) } ?: "—"}%")
                         ReadingRow("Temperature", "${k.keg_temperature?.let { "%.1f".format(it) } ?: "—"}${k.temperature_unit ?: "°C"}")
                         k.weight_raw?.takeIf { it.isNotBlank() }?.let { ReadingRow("Raw weight", "$it kg") }
