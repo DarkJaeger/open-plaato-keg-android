@@ -2,6 +2,7 @@ package com.openplaato.keg.ui.screens.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.openplaato.keg.data.preferences.AppPreferences
 import com.openplaato.keg.data.repository.PlaatoRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
@@ -21,11 +22,13 @@ data class SettingsState(
     val brewfatherUserId: String = "",
     val brewfatherApiKey: String = "",
     val brewfatherSaved: Boolean = false,
+    val pourNotificationsEnabled: Boolean = true,
 )
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val repo: PlaatoRepository,
+    private val prefs: AppPreferences,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SettingsState())
@@ -35,6 +38,10 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             val url = repo.serverUrl.first()
             _state.update { it.copy(serverUrl = url) }
+        }
+        viewModelScope.launch {
+            val enabled = prefs.pourNotificationsEnabled.first()
+            _state.update { it.copy(pourNotificationsEnabled = enabled) }
         }
         loadConfig()
     }
@@ -71,6 +78,12 @@ class SettingsViewModel @Inject constructor(
 
     fun onBrewfatherApiKeyChange(value: String) =
         _state.update { it.copy(brewfatherApiKey = value, brewfatherSaved = false) }
+
+    fun togglePourNotifications() {
+        val enabled = !_state.value.pourNotificationsEnabled
+        _state.update { it.copy(pourNotificationsEnabled = enabled) }
+        viewModelScope.launch { prefs.setPourNotificationsEnabled(enabled) }
+    }
 
     fun saveBrewfatherCreds() {
         viewModelScope.launch {

@@ -123,6 +123,27 @@ fun SettingsScreen(
 
             Spacer(Modifier.height(8.dp))
 
+            // ── Notifications ─────────────────────────────────────────
+            Text("Notifications", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Pour notifications", style = MaterialTheme.typography.bodyLarge)
+                    Text("Notify when a pour is detected on a keg.",
+                        style = MaterialTheme.typography.bodySmall, color = OnSurfaceMuted)
+                }
+                Switch(
+                    checked = state.pourNotificationsEnabled,
+                    onCheckedChange = { viewModel.togglePourNotifications() },
+                    colors = SwitchDefaults.colors(checkedThumbColor = Color.Black, checkedTrackColor = Amber500),
+                )
+            }
+
+            Spacer(Modifier.height(8.dp))
+
             // ── Brewfather batch import ────────────────────────────────
             Text("Brewfather Import", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
             Text(
