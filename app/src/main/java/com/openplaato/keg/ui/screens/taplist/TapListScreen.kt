@@ -43,6 +43,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
 import com.openplaato.keg.data.model.Tap
 import com.openplaato.keg.data.model.TapWithKeg
 import com.openplaato.keg.ui.theme.Amber500
@@ -59,6 +60,7 @@ fun TapListScreen(
     onNewTap: () -> Unit,
 ) {
     val state by viewModel.uiState.collectAsState()
+    val serverUrl by viewModel.serverUrl.collectAsState(initial = "")
 
     Scaffold(
         topBar = {
@@ -122,6 +124,7 @@ fun TapListScreen(
                         items(state.items, key = { it.tap.id }) { item ->
                             TapCard(
                                 item = item,
+                                serverUrl = serverUrl,
                                 onEdit = { onEditTap(item.tap) },
                             )
                         }
@@ -133,7 +136,7 @@ fun TapListScreen(
 }
 
 @Composable
-fun TapCard(item: TapWithKeg, onEdit: () -> Unit) {
+fun TapCard(item: TapWithKeg, serverUrl: String = "", onEdit: () -> Unit) {
     val tap = item.tap
     val hasKeg = item.keg != null
 
@@ -152,6 +155,16 @@ fun TapCard(item: TapWithKeg, onEdit: () -> Unit) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Top,
             ) {
+                if (tap.handle_image != null) {
+                    AsyncImage(
+                        model = "$serverUrl/uploads/tap-handles/${tap.handle_image}",
+                        contentDescription = "Tap handle",
+                        modifier = Modifier
+                            .size(64.dp)
+                            .clip(RoundedCornerShape(8.dp)),
+                    )
+                    Spacer(Modifier.width(12.dp))
+                }
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = item.displayName,

@@ -12,11 +12,15 @@ import com.openplaato.keg.data.model.Beverage
 import com.openplaato.keg.data.model.Keg
 import com.openplaato.keg.data.model.StatusResponse
 import com.openplaato.keg.data.model.Tap
+import com.openplaato.keg.data.model.TapHandleUploadResponse
 import com.openplaato.keg.data.model.TapSaveBody
 import com.openplaato.keg.data.model.ValueBody
+import okhttp3.MultipartBody
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.Multipart
 import retrofit2.http.POST
+import retrofit2.http.Part
 import retrofit2.http.Path
 
 interface PlaatoApiService {
@@ -33,6 +37,14 @@ interface PlaatoApiService {
 
     @POST("api/taps/{id}/delete")
     suspend fun deleteTap(@Path("id") id: String): StatusResponse
+
+    // Tap handles
+    @GET("api/tap-handles")
+    suspend fun getTapHandles(): List<String>
+
+    @Multipart
+    @POST("api/tap-handles/upload")
+    suspend fun uploadTapHandle(@Part file: MultipartBody.Part): TapHandleUploadResponse
 
     // Kegs (live data)
     @GET("api/kegs")

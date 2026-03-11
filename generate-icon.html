@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Open Plaato Keg – Generate 512×512 Icon</title>
+    <style>
+        body { background: #111; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; font-family: sans-serif; gap: 24px; }
+        button { background: #F59E0B; color: #000; border: none; padding: 14px 32px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; }
+        button:hover { background: #D97706; }
+        p { color: #aaa; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+    <!-- Preview at 256px -->
+    <svg id="icon" width="256" height="256" viewBox="0 0 108 108" xmlns="http://www.w3.org/2000/svg">
+        <!-- Background -->
+        <rect width="108" height="108" fill="#F59E0B"/>
+
+        <!-- Foam bubble – left -->
+        <circle cx="32" cy="48" r="9" fill="#1A1A2E"/>
+        <!-- Foam bubble – centre (higher + larger) -->
+        <circle cx="47" cy="44" r="10" fill="#1A1A2E"/>
+        <!-- Foam bubble – right -->
+        <circle cx="62" cy="48" r="9" fill="#1A1A2E"/>
+
+        <!-- Mug body (covers lower halves of foam) -->
+        <path fill="#1A1A2E" d="M 22,52 H 72 V 86 Q 72,90 68,90 H 26 Q 22,90 22,86 Z"/>
+
+        <!-- Handle -->
+        <path fill="#1A1A2E" d="M 72,62 C 87,62 87,80 72,80 L 72,74 C 81,74 81,68 72,68 Z"/>
+    </svg>
+
+    <button onclick="downloadPng()">Download 512×512 PNG</button>
+    <p>Open this file in any browser, then click the button.</p>
+
+    <script>
+        function downloadPng() {
+            const svg = document.getElementById('icon');
+
+            // Clone and resize to 512×512
+            const clone = svg.cloneNode(true);
+            clone.setAttribute('width', '512');
+            clone.setAttribute('height', '512');
+
+            const svgData = new XMLSerializer().serializeToString(clone);
+            const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+            const url = URL.createObjectURL(svgBlob);
+
+            const img = new Image();
+            img.onload = function () {
+                const canvas = document.createElement('canvas');
+                canvas.width = 512;
+                canvas.height = 512;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, 512, 512);
+                URL.revokeObjectURL(url);
+
+                const a = document.createElement('a');
+                a.download = 'ic_launcher_512.png';
+                a.href = canvas.toDataURL('image/png');
+                a.click();
+            };
+            img.src = url;
+        }
+    </script>
+</body>
+</html>

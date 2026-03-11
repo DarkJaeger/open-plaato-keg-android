@@ -1,5 +1,7 @@
 package com.openplaato.keg.data.repository
 
+import android.content.Context
+import android.net.Uri
 import com.openplaato.keg.data.api.PlaatoApiService
 import com.openplaato.keg.data.api.WebSocketManager
 import com.openplaato.keg.data.api.WsEvent
@@ -12,10 +14,14 @@ import com.openplaato.keg.data.model.Beverage
 import com.openplaato.keg.data.model.Keg
 import com.openplaato.keg.data.model.StatusResponse
 import com.openplaato.keg.data.model.Tap
+import com.openplaato.keg.data.model.TapHandleUploadResponse
 import com.openplaato.keg.data.model.ValueBody
 import com.openplaato.keg.data.model.TapSaveBody
 import com.openplaato.keg.data.preferences.AppPreferences
 import kotlinx.coroutines.flow.SharedFlow
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -36,6 +42,19 @@ class PlaatoRepository @Inject constructor(
     suspend fun getTaps(): Result<List<Tap>> = runCatching { api.getTaps() }
     suspend fun saveTap(id: String, body: TapSaveBody): Result<StatusResponse> = runCatching { api.saveTap(id, body) }
     suspend fun deleteTap(id: String): Result<StatusResponse> = runCatching { api.deleteTap(id) }
+
+    suspend fun getTapHandles(): Result<List<String>> = runCatching { api.getTapHandles() }
+
+    suspend fun uploadTapHandle(context: Context, uri: Uri): Result<TapHandleUploadResponse> = runCatching {
+        val stream = context.contentResolver.openInputStream(uri) ?: error("Cannot open image")
+        val bytes = stream.use { it.readBytes() }
+        val mimeType = context.contentResolver.getType(uri) ?: "image/jpeg"
+        val ext = when (mimeType) { "image/png" -> "png"; "image/webp" -> "webp"; else -> "jpg" }
+        val part = MultipartBody.Part.createFormData(
+            "file", "handle.$ext", bytes.toRequestBody(mimeType.toMediaType())
+        )
+        api.uploadTapHandle(part)
+    }
 
     suspend fun getKegs(): Result<List<Keg>> = runCatching { api.getKegs() }
 

@@ -1,5 +1,7 @@
 package com.openplaato.keg.ui.screens.tapedit
 
+import android.content.Context
+import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -37,6 +39,10 @@ data class TapEditState(
     val description: String = "",
     val tastingNotes: String = "",
     val kegId: String = "",
+    val deviceId: String = "",
+    val handleImage: String? = null,
+    val tapHandles: List<String> = emptyList(),
+    val isUploadingHandle: Boolean = false,
 )
 
 @HiltViewModel
@@ -49,6 +55,7 @@ class TapEditViewModel @Inject constructor(
 
     private val _state = MutableStateFlow(TapEditState())
     val state: StateFlow<TapEditState> = _state.asStateFlow()
+    val serverUrl get() = repo.serverUrl
 
     init {
         load()
@@ -59,10 +66,11 @@ class TapEditViewModel @Inject constructor(
             _state.update { it.copy(isLoading = true) }
             val kegs = repo.getKegs().getOrDefault(emptyList())
             val beverages = repo.getBeverages().getOrDefault(emptyList())
+            val tapHandles = repo.getTapHandles().getOrDefault(emptyList())
 
             if (tapId == "new") {
                 _state.update {
-                    it.copy(isLoading = false, kegs = kegs, beverages = beverages)
+                    it.copy(isLoading = false, kegs = kegs, beverages = beverages, tapHandles = tapHandles)
                 }
                 return@launch
             }
@@ -75,6 +83,7 @@ class TapEditViewModel @Inject constructor(
                         tap = tap,
                         kegs = kegs,
                         beverages = beverages,
+                        tapHandles = tapHandles,
                         tapNumber = tap.tap_number?.toString() ?: "",
                         name = tap.name ?: "",
                         brewery = tap.brewery ?: "",
@@ -85,6 +94,8 @@ class TapEditViewModel @Inject constructor(
                         description = tap.description ?: "",
                         tastingNotes = tap.tasting_notes ?: "",
                         kegId = tap.keg_id ?: "",
+                        deviceId = tap.device_id ?: "",
+                        handleImage = tap.handle_image,
                     )
                 }
             } else {
@@ -94,6 +105,23 @@ class TapEditViewModel @Inject constructor(
     }
 
     fun update(block: TapEditState.() -> TapEditState) = _state.update(block)
+
+    fun selectHandle(filename: String?) = _state.update { it.copy(handleImage = filename) }
+
+    fun uploadHandle(context: Context, uri: Uri) {
+        viewModelScope.launch {
+            _state.update { it.copy(isUploadingHandle = true) }
+            repo.uploadTapHandle(context, uri).getOrNull()?.let { resp ->
+                _state.update {
+                    it.copy(
+                        handleImage = resp.filename,
+                        tapHandles = (it.tapHandles + resp.filename).distinct(),
+                        isUploadingHandle = false,
+                    )
+                }
+            } ?: _state.update { it.copy(isUploadingHandle = false) }
+        }
+    }
 
     fun fillFromBeverage(bev: Beverage) {
         _state.update { s ->
@@ -127,6 +155,8 @@ class TapEditViewModel @Inject constructor(
                 description = s.description.trim(),
                 tasting_notes = s.tastingNotes.trim(),
                 keg_id = s.kegId.takeIf { it.isNotBlank() },
+                device_id = s.deviceId.trim().takeIf { it.isNotBlank() },
+                handle_image = s.handleImage,
             )
 
             val result = repo.saveTap(id, body)

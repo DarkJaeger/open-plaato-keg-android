@@ -21,6 +21,9 @@ data class Tap(
 )
 
 @Serializable
+data class TapHandleUploadResponse(val filename: String)
+
+@Serializable
 data class TapSaveBody(
     val tap_number: Int? = null,
     val name: String = "",

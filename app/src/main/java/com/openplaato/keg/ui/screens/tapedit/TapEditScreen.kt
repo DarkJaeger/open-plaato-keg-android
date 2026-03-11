@@ -1,5 +1,7 @@
 package com.openplaato.keg.ui.screens.tapedit
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -14,6 +16,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -21,6 +25,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -30,9 +35,11 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -49,10 +56,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil3.compose.AsyncImage
 import com.openplaato.keg.data.model.Beverage
 import com.openplaato.keg.ui.theme.Amber500
 import com.openplaato.keg.ui.theme.CardBackground
@@ -66,7 +75,13 @@ fun TapEditScreen(
     viewModel: TapEditViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
+    val serverUrl by viewModel.serverUrl.collectAsState(initial = "")
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showPicker by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        uri?.let { viewModel.uploadHandle(context, it) }
+    }
     val isNew = tapId == "new"
 
     Scaffold(
@@ -189,6 +204,38 @@ fun TapEditScreen(
                 onSelect = { viewModel.update { copy(kegId = it) } },
             )
 
+            SectionLabel("Open-Tap Display")
+            OutlinedTextField(
+                value = state.deviceId,
+                onValueChange = { if (it.length <= 6) viewModel.update { copy(deviceId = it) } },
+                label = { Text("Device ID (max 6 chars)") },
+                placeholder = { Text("e.g. tap1") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+
+            SectionLabel("Tap Handle")
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                if (state.handleImage != null) {
+                    AsyncImage(
+                        model = "$serverUrl/uploads/tap-handles/${state.handleImage}",
+                        contentDescription = "Tap handle",
+                        modifier = Modifier
+                            .size(80.dp)
+                            .clip(RoundedCornerShape(8.dp)),
+                    )
+                    TextButton(onClick = { viewModel.selectHandle(null) }) { Text("Remove") }
+                }
+                if (state.isUploadingHandle) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp, color = Amber500)
+                } else {
+                    OutlinedButton(onClick = { showPicker = true }) { Text("Change handle image") }
+                }
+            }
+
             state.error?.let { err ->
                 Text(err, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
             }
@@ -223,6 +270,72 @@ fun TapEditScreen(
             },
         )
     }
+
+    if (showPicker) {
+        HandlePickerDialog(
+            serverUrl = serverUrl,
+            tapHandles = state.tapHandles,
+            isUploading = state.isUploadingHandle,
+            onSelect = { viewModel.selectHandle(it); showPicker = false },
+            onUpload = { galleryLauncher.launch("image/*") },
+            onDismiss = { showPicker = false },
+        )
+    }
+}
+
+@Composable
+private fun HandlePickerDialog(
+    serverUrl: String,
+    tapHandles: List<String>,
+    isUploading: Boolean,
+    onSelect: (String?) -> Unit,
+    onUpload: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Tap Handle Image") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                if (tapHandles.isNotEmpty()) {
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .size(80.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(CardBackground)
+                                    .clickable { onSelect(null) },
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Icon(Icons.Default.Close, contentDescription = "None", tint = OnSurfaceMuted)
+                            }
+                        }
+                        items(tapHandles) { filename ->
+                            AsyncImage(
+                                model = "$serverUrl/uploads/tap-handles/$filename",
+                                contentDescription = filename,
+                                modifier = Modifier
+                                    .size(80.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .clickable { onSelect(filename) },
+                            )
+                        }
+                    }
+                }
+                if (isUploading) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp, color = Amber500)
+                } else {
+                    OutlinedButton(onClick = onUpload, modifier = Modifier.fillMaxWidth()) {
+                        Text("Upload from gallery")
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("Close") }
+        },
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -238,7 +351,7 @@ private fun BeveragePickerDropdown(beverages: List<Beverage>, onSelect: (Beverag
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
             modifier = Modifier
                 .fillMaxWidth()
-                .menuAnchor(),
+                .menuAnchor(MenuAnchorType.PrimaryNotEditable),
         )
         ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             beverages.forEach { bev ->
@@ -278,7 +391,7 @@ private fun KegPickerDropdown(
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
             modifier = Modifier
                 .fillMaxWidth()
-                .menuAnchor(),
+                .menuAnchor(MenuAnchorType.PrimaryNotEditable),
         )
         ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             DropdownMenuItem(

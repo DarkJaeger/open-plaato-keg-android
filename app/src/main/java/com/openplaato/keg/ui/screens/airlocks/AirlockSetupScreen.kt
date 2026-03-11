@@ -25,7 +25,7 @@ import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -201,7 +201,7 @@ private fun AirlockSetupCard(
         }
 
         // ── Grainfather ────────────────────────────────────────────
-        Divider(modifier = Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.surfaceVariant)
+        HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.surfaceVariant)
         Row(
             modifier = Modifier.fillMaxWidth().clickable { grainfatherExpanded = !grainfatherExpanded },
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -258,7 +258,7 @@ private fun AirlockSetupCard(
         }
 
         // ── Brewfather ─────────────────────────────────────────────
-        Divider(modifier = Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.surfaceVariant)
+        HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.surfaceVariant)
         Row(
             modifier = Modifier.fillMaxWidth().clickable { brewfatherExpanded = !brewfatherExpanded },
             horizontalArrangement = Arrangement.SpaceBetween,
