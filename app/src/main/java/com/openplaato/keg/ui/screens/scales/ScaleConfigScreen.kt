@@ -104,7 +104,8 @@ fun ScaleConfigScreen(
                         ReadingRow(amountLabel, "${k.amount_left?.let { "%.2f".format(it) } ?: "—"} $amountUnit")
                         ReadingRow("Remaining", "${k.percent_of_beer_left?.let { "%.1f".format(it) } ?: "—"}%")
                         ReadingRow("Temperature", "${k.keg_temperature?.let { "%.1f".format(it) } ?: "—"}${k.temperature_unit ?: "°C"}")
-                        k.weight_raw?.takeIf { it.isNotBlank() }?.let { ReadingRow("Raw weight", "$it kg") }
+                        k.weight_raw?.toDoubleOrNull()?.takeIf { it > -1000 && it < 500 }
+                            ?.let { ReadingRow("Raw weight", "${"%.2f".format(it)} kg") }
                         k.last_pour?.takeIf { it > 0 }?.let { ReadingRow("Last pour", "%.0f ml".format(it * 1000)) }
                     } ?: Text("No data", color = OnSurfaceMuted)
                 }

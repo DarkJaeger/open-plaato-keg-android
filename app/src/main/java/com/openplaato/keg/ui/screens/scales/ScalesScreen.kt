@@ -194,10 +194,6 @@ fun ScaleCard(keg: Keg, onConfigure: () -> Unit) {
                 color = if (isLow) LowRed else OnSurfaceMuted,
             )
 
-            keg.weight_raw?.takeIf { it.isNotBlank() }?.let { raw ->
-                Spacer(Modifier.height(4.dp))
-                Text("Raw: $raw kg", style = MaterialTheme.typography.bodySmall, color = OnSurfaceMuted)
-            }
         }
     }
 }
