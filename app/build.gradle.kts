@@ -81,4 +81,7 @@ dependencies {
     // Coil
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
+
+    // Reorderable (drag-to-reorder LazyColumn)
+    implementation(libs.reorderable)
 }

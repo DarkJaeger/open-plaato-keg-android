@@ -14,14 +14,17 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -45,6 +48,8 @@ import com.openplaato.keg.ui.theme.CardBackground
 import com.openplaato.keg.ui.theme.LowRed
 import com.openplaato.keg.ui.theme.OnSurfaceMuted
 import com.openplaato.keg.ui.theme.PouringGreen
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -88,15 +93,11 @@ fun ScalesScreen(
                     }
                 }
                 else -> {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                        contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
-                    ) {
-                        items(state.kegs, key = { it.id }) { keg ->
-                            ScaleCard(keg = keg, onConfigure = { onConfigureScale(keg.id) })
-                        }
-                    }
+                    ReorderableScaleList(
+                        kegs = state.kegs,
+                        onMove = { from, to -> viewModel.moveKeg(from, to) },
+                        onConfigure = onConfigureScale,
+                    )
                 }
             }
         }
@@ -104,8 +105,44 @@ fun ScalesScreen(
 }
 
 @Composable
-fun ScaleCard(keg: Keg, onConfigure: () -> Unit) {
-    val label = keg.my_label?.takeIf { it.isNotBlank() } ?: keg.id.take(8) + "…"
+private fun ReorderableScaleList(
+    kegs: List<Keg>,
+    onMove: (from: Int, to: Int) -> Unit,
+    onConfigure: (String) -> Unit,
+) {
+    val listState = rememberLazyListState()
+    val reorderState = rememberReorderableLazyListState(listState) { from, to ->
+        onMove(from.index, to.index)
+    }
+
+    LazyColumn(
+        state = listState,
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
+    ) {
+        items(kegs, key = { it.id }) { keg ->
+            ReorderableItem(reorderState, key = keg.id) { isDragging ->
+                ScaleCard(
+                    keg = keg,
+                    onConfigure = { onConfigure(keg.id) },
+                    // Pass the drag handle modifier so only the handle icon initiates dragging.
+                    dragHandleModifier = Modifier.draggableHandle(),
+                    isDragging = isDragging,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ScaleCard(
+    keg: Keg,
+    onConfigure: () -> Unit,
+    dragHandleModifier: Modifier = Modifier,
+    isDragging: Boolean = false,
+) {
+    val label = keg.my_label?.takeIf { it.isNotBlank() } ?: (keg.id.take(8) + "…")
     val amount = keg.amount_left ?: 0.0
     val pct = (keg.percent_of_beer_left ?: 0.0).coerceIn(0.0, 100.0)
     val volumeUnit = when (keg.beer_left_unit) { "litre" -> "L"; else -> keg.beer_left_unit ?: "L" }
@@ -125,8 +162,23 @@ fun ScaleCard(keg: Keg, onConfigure: () -> Unit) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
+                // Drag handle — leftmost. draggableHandle() must be applied here inside
+                // the ReorderableItem scope (passed in as dragHandleModifier).
+                IconButton(
+                    onClick = {},
+                    modifier = dragHandleModifier.size(36.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.DragHandle,
+                        contentDescription = "Drag to reorder",
+                        tint = OnSurfaceMuted,
+                    )
+                }
+
+                Spacer(Modifier.width(4.dp))
+
                 Column(modifier = Modifier.weight(1f)) {
                     Text(label, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
                     Row(
@@ -193,7 +245,6 @@ fun ScaleCard(keg: Keg, onConfigure: () -> Unit) {
                 style = MaterialTheme.typography.bodyMedium,
                 color = if (isLow) LowRed else OnSurfaceMuted,
             )
-
         }
     }
 }
