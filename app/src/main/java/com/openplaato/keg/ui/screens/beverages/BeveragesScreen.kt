@@ -76,7 +76,7 @@ fun BeveragesScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Beverages", fontWeight = FontWeight.Bold) },
+                title = { Text("Beers", fontWeight = FontWeight.Bold) },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
             )
         },

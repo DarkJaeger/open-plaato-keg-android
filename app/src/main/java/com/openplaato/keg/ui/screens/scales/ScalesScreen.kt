@@ -62,7 +62,7 @@ fun ScalesScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Scales", fontWeight = FontWeight.Bold) },
+                title = { Text("Kegs", fontWeight = FontWeight.Bold) },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
             )
         },
