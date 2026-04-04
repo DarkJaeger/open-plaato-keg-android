@@ -1,6 +1,8 @@
 package com.openplaato.keg.data.api
 
 import com.openplaato.keg.data.model.AirlockEnabledBody
+import com.openplaato.keg.data.model.TransferScale
+import com.openplaato.keg.data.model.TransferScaleConfigBody
 import com.openplaato.keg.data.model.AppConfigResponse
 import com.openplaato.keg.data.model.BrewfatherBatch
 import com.openplaato.keg.data.model.BrewfatherBody
@@ -132,4 +134,17 @@ interface PlaatoApiService {
 
     @POST("api/beverages/{id}/delete")
     suspend fun deleteBeverage(@Path("id") id: String): StatusResponse
+
+    // Transfer scales
+    @GET("api/transfer-scales")
+    suspend fun getTransferScales(): List<TransferScale>
+
+    @GET("api/transfer-scales/{id}")
+    suspend fun getTransferScale(@Path("id") id: String): TransferScale
+
+    @POST("api/transfer-scales/{id}/config")
+    suspend fun configureTransferScale(@Path("id") id: String, @Body body: TransferScaleConfigBody): StatusResponse
+
+    @POST("api/transfer-scales/{id}/delete")
+    suspend fun deleteTransferScale(@Path("id") id: String): StatusResponse
 }

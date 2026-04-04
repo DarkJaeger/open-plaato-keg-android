@@ -44,12 +44,18 @@ sealed class Screen(val route: String, val label: String, val icon: ImageVector)
     }
     data object AirlockSetup : Screen("airlocksetup", "Airlock Setup", Icons.Default.Opacity)
     data object BrewfatherBatches : Screen("brewfather/batches", "Brewfather Batches", Icons.Default.SportsBar)
+    data object Transfer : Screen("transfer", "Transfer", Icons.Default.Scale)
+    data object TransferScaleConfig : Screen("transferscaleconfig/{scaleId}", "Transfer Scale Config", Icons.Default.Scale) {
+        fun route(scaleId: String) = "transferscaleconfig/$scaleId"
+        const val ARG = "scaleId"
+    }
 }
 
 val bottomNavScreens = listOf(
     Screen.TapList,
     Screen.Scales,
     Screen.Airlocks,
+    Screen.Transfer,
     Screen.Beverages,
     Screen.Settings,
 )

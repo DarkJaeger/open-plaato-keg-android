@@ -6,6 +6,8 @@ import com.openplaato.keg.data.api.PlaatoApiService
 import com.openplaato.keg.data.api.WebSocketManager
 import com.openplaato.keg.data.api.WsEvent
 import com.openplaato.keg.data.model.AirlockEnabledBody
+import com.openplaato.keg.data.model.TransferScale
+import com.openplaato.keg.data.model.TransferScaleConfigBody
 import com.openplaato.keg.data.model.Airlock
 import com.openplaato.keg.data.model.BrewfatherBody
 import com.openplaato.keg.data.model.BrewfatherCredsBody
@@ -92,4 +94,10 @@ class PlaatoRepository @Inject constructor(
     suspend fun getBeverages(): Result<List<Beverage>> = runCatching { api.getBeverages() }
     suspend fun saveBeverage(id: String, body: Beverage): Result<StatusResponse> = runCatching { api.saveBeverage(id, body) }
     suspend fun deleteBeverage(id: String): Result<StatusResponse> = runCatching { api.deleteBeverage(id) }
+
+    // Transfer scales
+    suspend fun getTransferScales(): Result<List<TransferScale>> = runCatching { api.getTransferScales() }
+    suspend fun getTransferScale(id: String): Result<TransferScale> = runCatching { api.getTransferScale(id) }
+    suspend fun configureTransferScale(id: String, body: TransferScaleConfigBody): Result<StatusResponse> = runCatching { api.configureTransferScale(id, body) }
+    suspend fun deleteTransferScale(id: String): Result<StatusResponse> = runCatching { api.deleteTransferScale(id) }
 }

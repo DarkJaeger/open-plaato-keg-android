@@ -2,6 +2,7 @@ package com.openplaato.keg.data.api
 
 import com.openplaato.keg.data.model.Airlock
 import com.openplaato.keg.data.model.Keg
+import com.openplaato.keg.data.model.TransferScale
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.serialization.json.Json
@@ -20,6 +21,7 @@ import javax.inject.Singleton
 sealed class WsEvent {
     data class KegUpdate(val keg: Keg) : WsEvent()
     data class AirlockUpdate(val airlock: Airlock) : WsEvent()
+    data class TransferScaleUpdate(val scale: TransferScale) : WsEvent()
 }
 
 @Singleton
@@ -74,6 +76,10 @@ class WebSocketManager @Inject constructor(
                 val data = obj["data"]?.jsonObject ?: return
                 val airlock = json.decodeFromJsonElement<Airlock>(data)
                 _events.tryEmit(WsEvent.AirlockUpdate(airlock))
+            } else if (type == "transfer_scale") {
+                val data = obj["data"]?.jsonObject ?: return
+                val scale = json.decodeFromJsonElement<TransferScale>(data)
+                _events.tryEmit(WsEvent.TransferScaleUpdate(scale))
             } else {
                 val keg = json.decodeFromJsonElement<Keg>(obj)
                 _events.tryEmit(WsEvent.KegUpdate(keg))

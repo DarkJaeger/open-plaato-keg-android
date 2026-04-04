@@ -24,6 +24,8 @@ import androidx.navigation.navArgument
 import com.openplaato.keg.ui.navigation.BottomNavBar
 import com.openplaato.keg.ui.navigation.Screen
 import com.openplaato.keg.ui.screens.airlocks.AirlocksScreen
+import com.openplaato.keg.ui.screens.transfer.TransferScreen
+import com.openplaato.keg.ui.screens.transfer.TransferScaleConfigScreen
 import com.openplaato.keg.ui.screens.airlocks.AirlockSetupScreen
 import com.openplaato.keg.ui.screens.beverages.BeverageEditScreen
 import com.openplaato.keg.ui.screens.beverages.BeveragesScreen
@@ -85,6 +87,13 @@ class MainActivity : ComponentActivity() {
                         composable(Screen.Airlocks.route) {
                             AirlocksScreen(wsEvents = tapListVm.wsEvents)
                         }
+                        composable(Screen.Transfer.route) {
+                            TransferScreen(
+                                onConfigureTransferScale = { scaleId ->
+                                    navController.navigate(Screen.TransferScaleConfig.route(scaleId))
+                                },
+                            )
+                        }
                         composable(Screen.Beverages.route) {
                             BeveragesScreen(
                                 onEdit = { bev -> navController.navigate(Screen.BeverageEdit.route(bev.id)) },
@@ -130,6 +139,12 @@ class MainActivity : ComponentActivity() {
                             arguments = listOf(navArgument(Screen.ScaleConfig.ARG) { type = NavType.StringType }),
                         ) {
                             ScaleConfigScreen(onBack = { navController.popBackStack() })
+                        }
+                        composable(
+                            route = Screen.TransferScaleConfig.route,
+                            arguments = listOf(navArgument(Screen.TransferScaleConfig.ARG) { type = NavType.StringType }),
+                        ) {
+                            TransferScaleConfigScreen(onBack = { navController.popBackStack() })
                         }
                     }
                 }
