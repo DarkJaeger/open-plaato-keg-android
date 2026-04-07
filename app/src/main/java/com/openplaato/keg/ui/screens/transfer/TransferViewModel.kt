@@ -46,7 +46,13 @@ class TransferViewModel @Inject constructor(private val repo: PlaatoRepository) 
         _uiState.update { state ->
             val idx = state.scales.indexOfFirst { it.id == scale.id }
             val updated = if (idx >= 0) {
-                state.scales.toMutableList().also { it[idx] = scale }
+                val existing = state.scales[idx]
+                val merged = scale.copy(
+                    label = scale.label ?: existing.label,
+                    empty_keg_weight = scale.empty_keg_weight ?: existing.empty_keg_weight,
+                    target_weight = scale.target_weight ?: existing.target_weight,
+                )
+                state.scales.toMutableList().also { it[idx] = merged }
             } else {
                 state.scales + scale
             }
