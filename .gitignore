@@ -10,3 +10,4 @@ app/release
 .externalNativeBuild
 .cxx
 local.properties
+.claude/worktrees/jovial-allen/
