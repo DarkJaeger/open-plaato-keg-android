@@ -52,8 +52,8 @@ class TransferScaleConfigViewModel @Inject constructor(
                     isLoading = false,
                     scale = scale,
                     labelInput = scale?.label ?: "",
-                    emptyKegWeightInput = scale?.empty_keg_weight?.let { g -> "%.3f".format(g / 1000.0) } ?: "",
-                    targetWeightInput = scale?.target_weight?.let { g -> "%.3f".format(g / 1000.0) } ?: "",
+                    emptyKegWeightInput = scale?.empty_keg_weight?.let { "%.3f".format(it) } ?: "",
+                    targetWeightInput = scale?.target_weight?.let { "%.3f".format(it) } ?: "",
                     error = if (scale == null) "Transfer scale not found" else null,
                 )
             }
@@ -69,8 +69,8 @@ class TransferScaleConfigViewModel @Inject constructor(
             _state.update { it.copy(isSaving = true, feedback = null) }
             val body = TransferScaleConfigBody(
                 label = _state.value.labelInput.trim().takeIf { it.isNotEmpty() },
-                empty_keg_weight = _state.value.emptyKegWeightInput.trim().toDoubleOrNull()?.let { it * 1000.0 },
-                target_weight = _state.value.targetWeightInput.trim().toDoubleOrNull()?.let { it * 1000.0 },
+                empty_keg_weight = _state.value.emptyKegWeightInput.trim().toDoubleOrNull(),
+                target_weight = _state.value.targetWeightInput.trim().toDoubleOrNull(),
             )
             val result = repo.configureTransferScale(scaleId, body)
             if (result.isSuccess) {

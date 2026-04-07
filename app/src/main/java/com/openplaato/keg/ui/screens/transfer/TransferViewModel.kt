@@ -32,12 +32,26 @@ class TransferViewModel @Inject constructor(private val repo: PlaatoRepository) 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             val result = repo.getTransferScales()
+            val scales = result.getOrDefault(emptyList())
             _uiState.update { state ->
                 state.copy(
                     isLoading = false,
-                    scales = result.getOrDefault(emptyList()),
+                    scales = scales,
                     error = result.exceptionOrNull()?.message,
                 )
+            }
+            // The list endpoint may omit config fields (empty_keg_weight, target_weight),
+            // so fetch each scale individually to get the full data.
+            scales.forEach { scale ->
+                launch {
+                    val full = repo.getTransferScale(scale.id).getOrNull() ?: return@launch
+                    _uiState.update { state ->
+                        val idx = state.scales.indexOfFirst { it.id == full.id }
+                        if (idx >= 0) {
+                            state.copy(scales = state.scales.toMutableList().also { it[idx] = full })
+                        } else state
+                    }
+                }
             }
         }
     }

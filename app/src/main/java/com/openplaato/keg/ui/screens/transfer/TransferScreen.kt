@@ -149,7 +149,7 @@ private fun TransferScaleCard(
 
             Row(verticalAlignment = Alignment.Bottom) {
                 Text(
-                    text = scale.raw_weight?.let { "%.2f".format(it / 1000.0) } ?: "—",
+                    text = scale.raw_weight?.let { "%.2f".format(it) } ?: "—",
                     fontSize = 36.sp,
                     fontWeight = FontWeight.Bold,
                     color = Amber500,
@@ -198,12 +198,12 @@ private fun TransferScaleCard(
             Spacer(Modifier.height(6.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
-                    text = "Empty keg: ${scale.empty_keg_weight?.let { "%.2f".format(it / 1000.0) } ?: "—"} kg",
+                    text = "Empty keg: ${scale.empty_keg_weight?.let { "%.2f".format(it) } ?: "—"} kg",
                     style = MaterialTheme.typography.bodySmall,
                     color = OnSurfaceMuted,
                 )
                 Text(
-                    text = "Target: ${scale.target_weight?.let { "%.2f".format(it / 1000.0) } ?: "—"} kg",
+                    text = "Target: ${scale.target_weight?.let { "%.2f".format(it) } ?: "—"} kg",
                     style = MaterialTheme.typography.bodySmall,
                     color = OnSurfaceMuted,
                 )
