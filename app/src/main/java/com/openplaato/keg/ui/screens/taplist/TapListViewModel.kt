@@ -77,6 +77,7 @@ class TapListViewModel @Inject constructor(
                         }
                     }
                     is WsEvent.AirlockUpdate -> { /* handled by AirlocksScreen */ }
+                    is WsEvent.TransferScaleUpdate -> { /* handled by ScalesScreen */ }
                 }
             }
         }
