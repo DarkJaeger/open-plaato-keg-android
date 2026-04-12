@@ -36,7 +36,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.openplaato.keg.ui.theme.Amber500
 import com.openplaato.keg.ui.theme.OnSurfaceMuted
 
@@ -78,12 +78,24 @@ fun SettingsScreen(
                 value = state.serverUrl,
                 onValueChange = viewModel::onUrlChange,
                 label = { Text("Server URL") },
-                placeholder = { Text("http://192.168.1.10:4000") },
+                placeholder = { Text("http://192.168.1.10:8085") },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions(onDone = { keyboard?.hide(); viewModel.save() }),
                 modifier = Modifier.fillMaxWidth(),
             )
+            Text(
+                text = "Server version: ${state.serverVersion ?: "Unavailable"}",
+                style = MaterialTheme.typography.bodyMedium,
+                color = OnSurfaceMuted,
+            )
+            state.serverVersionError?.let { error ->
+                Text(
+                    text = "Version check error: $error",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
             if (state.saved) {
                 Text(
                     "Saved — restart the app for the connection to take effect.",
@@ -96,6 +108,10 @@ fun SettingsScreen(
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = Amber500, contentColor = Color.Black),
             ) { Text("Save", fontWeight = FontWeight.Bold) }
+            OutlinedButton(
+                onClick = { keyboard?.hide(); viewModel.refreshServerVersion() },
+                modifier = Modifier.fillMaxWidth(),
+            ) { Text("Refresh Version", fontWeight = FontWeight.Medium) }
 
             Spacer(Modifier.height(8.dp))
 

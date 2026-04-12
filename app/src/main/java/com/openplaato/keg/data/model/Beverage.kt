@@ -34,7 +34,9 @@ data class StatusResponse(
 data class ValueBody(val value: String)
 
 @Serializable
-data class AppConfigResponse(val airlock_enabled: Boolean = true)
+data class AppConfigResponse(
+    val airlock_enabled: Boolean = true,
+)
 
 @Serializable
 data class AirlockEnabledBody(val enabled: Boolean)
@@ -70,4 +72,21 @@ data class BrewfatherBody(
     val url: String = "",
     val og: String? = null,
     val batch_volume: String? = null,
+)
+
+@Serializable
+data class GithubLatestReleaseResponse(
+    val tag_name: String? = null,
+)
+
+@Serializable
+data class AliveResponse(
+    val version: String? = null,
+    val status: String? = null,
+)
+
+data class ServerVersionStatus(
+    val serverVersion: String?,
+    val latestGithubVersion: String?,
+    val isUpdateAvailable: Boolean,
 )

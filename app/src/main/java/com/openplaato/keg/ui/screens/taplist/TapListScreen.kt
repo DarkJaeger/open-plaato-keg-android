@@ -29,6 +29,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -94,6 +95,14 @@ fun TapListScreen(
                 state.error != null && state.items.isEmpty() -> {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            state.serverUpdateMessage?.let { message ->
+                                UpdateBanner(
+                                    message = message,
+                                    modifier = Modifier
+                                        .padding(horizontal = 24.dp)
+                                        .padding(bottom = 16.dp),
+                                )
+                            }
                             Text(
                                 state.error ?: "Error",
                                 color = MaterialTheme.colorScheme.error,
@@ -121,6 +130,11 @@ fun TapListScreen(
                             horizontal = 16.dp, vertical = 16.dp
                         ),
                     ) {
+                        state.serverUpdateMessage?.let { message ->
+                            item(key = "server-update-banner") {
+                                UpdateBanner(message = message)
+                            }
+                        }
                         items(state.items, key = { it.tap.id }) { item ->
                             TapCard(
                                 item = item,
@@ -132,6 +146,26 @@ fun TapListScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun UpdateBanner(
+    message: String,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        color = Amber500.copy(alpha = 0.16f),
+        tonalElevation = 0.dp,
+    ) {
+        Text(
+            text = message,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+        )
     }
 }
 

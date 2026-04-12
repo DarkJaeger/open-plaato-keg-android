@@ -20,6 +20,7 @@ data class TapListUiState(
     val items: List<TapWithKeg> = emptyList(),
     val isLoading: Boolean = true,
     val error: String? = null,
+    val serverUpdateMessage: String? = null,
 )
 
 @HiltViewModel
@@ -62,7 +63,10 @@ class TapListViewModel @Inject constructor(
         }
     }
 
-    fun connectWebSocket(baseUrl: String) = repo.connectWebSocket(baseUrl)
+    fun connectWebSocket(baseUrl: String) {
+        repo.connectWebSocket(baseUrl)
+        checkServerVersion(baseUrl)
+    }
 
     private fun observeWsEvents() {
         viewModelScope.launch {
@@ -87,4 +91,21 @@ class TapListViewModel @Inject constructor(
         taps
             .sortedWith(compareBy(nullsLast()) { it.tap_number })
             .map { tap -> TapWithKeg(tap = tap, keg = tap.keg_id?.let { kegs[it] }) }
+
+    private fun checkServerVersion(baseUrl: String) {
+        viewModelScope.launch {
+            val versionStatus = repo.checkServerVersion(baseUrl).getOrNull()
+            val updateMessage = when {
+                versionStatus == null -> null
+                versionStatus.isUpdateAvailable -> {
+                    val latestVersion = versionStatus.latestGithubVersion ?: "latest"
+                    val serverVersion = versionStatus.serverVersion ?: "unknown"
+                    "Server update available: running $serverVersion, latest is $latestVersion."
+                }
+                else -> null
+            }
+
+            _uiState.update { it.copy(serverUpdateMessage = updateMessage) }
+        }
+    }
 }

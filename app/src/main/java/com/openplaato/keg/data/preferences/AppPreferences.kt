@@ -17,7 +17,7 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(na
 
 @Singleton
 class AppPreferences @Inject constructor(
-    @ApplicationContext private val context: Context,
+    @param:ApplicationContext private val context: Context,
 ) {
     private val serverUrlKey = stringPreferencesKey("server_url")
     private val pourNotificationsKey = booleanPreferencesKey("pour_notifications_enabled")
@@ -35,7 +35,7 @@ class AppPreferences @Inject constructor(
 
     suspend fun setServerUrl(url: String) {
         context.dataStore.edit { prefs ->
-            prefs[serverUrlKey] = url.trimEnd('/')
+            prefs[serverUrlKey] = normalizeServerUrl(url)
         }
     }
 
@@ -57,6 +57,16 @@ class AppPreferences @Inject constructor(
     suspend fun setKegOrder(orderedIds: List<String>) {
         context.dataStore.edit { prefs ->
             prefs[kegOrderKey] = orderedIds.joinToString(",")
+        }
+    }
+
+    private fun normalizeServerUrl(url: String): String {
+        val trimmed = url.trim().trimEnd('/')
+        if (trimmed.isBlank()) return ""
+        return if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+            trimmed
+        } else {
+            "http://$trimmed"
         }
     }
 }

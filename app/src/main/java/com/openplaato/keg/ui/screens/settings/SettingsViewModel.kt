@@ -17,6 +17,8 @@ import javax.inject.Inject
 data class SettingsState(
     val serverUrl: String = "",
     val saved: Boolean = false,
+    val serverVersion: String? = null,
+    val serverVersionError: String? = null,
     val airlockEnabled: Boolean = true,
     val brewfatherConfigured: Boolean = false,
     val brewfatherUserId: String = "",
@@ -38,6 +40,7 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             val url = repo.serverUrl.first()
             _state.update { it.copy(serverUrl = url) }
+            loadServerVersion(url)
         }
         viewModelScope.launch {
             val enabled = prefs.pourNotificationsEnabled.first()
@@ -63,8 +66,16 @@ class SettingsViewModel @Inject constructor(
 
     fun save() {
         viewModelScope.launch {
-            repo.saveServerUrl(_state.value.serverUrl.trim())
+            val url = _state.value.serverUrl.trim()
+            repo.saveServerUrl(url)
             _state.update { it.copy(saved = true) }
+            loadServerVersion(url)
+        }
+    }
+
+    fun refreshServerVersion() {
+        viewModelScope.launch {
+            loadServerVersion(_state.value.serverUrl)
         }
     }
 
@@ -99,6 +110,19 @@ class SettingsViewModel @Inject constructor(
                     )
                 }
             }
+        }
+    }
+
+    private suspend fun loadServerVersion(url: String) {
+        val result = repo.getServerVersion(url)
+        val error = result.exceptionOrNull()?.let { throwable ->
+            throwable.message ?: throwable::class.java.simpleName
+        }
+        _state.update {
+            it.copy(
+                serverVersion = result.getOrNull(),
+                serverVersionError = error,
+            )
         }
     }
 }

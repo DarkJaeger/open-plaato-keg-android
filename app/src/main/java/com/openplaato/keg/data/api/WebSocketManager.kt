@@ -72,17 +72,22 @@ class WebSocketManager @Inject constructor(
         try {
             val obj = json.parseToJsonElement(text).jsonObject
             val type = obj["type"]?.jsonPrimitive?.content
-            if (type == "airlock") {
-                val data = obj["data"]?.jsonObject ?: return
-                val airlock = json.decodeFromJsonElement<Airlock>(data)
-                _events.tryEmit(WsEvent.AirlockUpdate(airlock))
-            } else if (type == "transfer_scale") {
-                val data = obj["data"]?.jsonObject ?: return
-                val scale = json.decodeFromJsonElement<TransferScale>(data)
-                _events.tryEmit(WsEvent.TransferScaleUpdate(scale))
-            } else {
-                val keg = json.decodeFromJsonElement<Keg>(obj)
-                _events.tryEmit(WsEvent.KegUpdate(keg))
+            when (type) {
+                "airlock" -> {
+                    val data = obj["data"]?.jsonObject ?: return
+                    val airlock = json.decodeFromJsonElement<Airlock>(data)
+                    _events.tryEmit(WsEvent.AirlockUpdate(airlock))
+                }
+                "transfer_scale" -> {
+                    val data = obj["data"]?.jsonObject ?: return
+                    val scale = json.decodeFromJsonElement<TransferScale>(data)
+                    _events.tryEmit(WsEvent.TransferScaleUpdate(scale))
+                }
+                null -> {
+                    val keg = json.decodeFromJsonElement<Keg>(obj)
+                    _events.tryEmit(WsEvent.KegUpdate(keg))
+                }
+                else -> return
             }
         } catch (_: Exception) {}
     }
