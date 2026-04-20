@@ -9,6 +9,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts.RequestPermission
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.LaunchedEffect
@@ -21,6 +23,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.openplaato.keg.data.preferences.AppPreferences
 import com.openplaato.keg.ui.navigation.BottomNavBar
 import com.openplaato.keg.ui.navigation.Screen
 import com.openplaato.keg.ui.screens.airlocks.AirlocksScreen
@@ -29,6 +32,7 @@ import com.openplaato.keg.ui.screens.transfer.TransferScaleConfigScreen
 import com.openplaato.keg.ui.screens.airlocks.AirlockSetupScreen
 import com.openplaato.keg.ui.screens.beverages.BeverageEditScreen
 import com.openplaato.keg.ui.screens.beverages.BeveragesScreen
+import com.openplaato.keg.ui.screens.onboarding.OnboardingScreen
 import com.openplaato.keg.ui.screens.history.HistoryScreen
 import com.openplaato.keg.ui.screens.scales.ScaleConfigScreen
 import com.openplaato.keg.ui.screens.scales.ScalesScreen
@@ -39,9 +43,12 @@ import com.openplaato.keg.ui.screens.taplist.TapListScreen
 import com.openplaato.keg.ui.screens.taplist.TapListViewModel
 import com.openplaato.keg.ui.theme.OpenPlaatoKegTheme
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    @Inject lateinit var appPrefs: AppPreferences
+
     override fun onCreate(savedInstanceState: Bundle?) {
         setTheme(R.style.Theme_OpenPlaatoKeg)
         super.onCreate(savedInstanceState)
@@ -51,6 +58,7 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 val tapListVm: TapListViewModel = hiltViewModel()
                 val serverUrl by tapListVm.serverUrl.collectAsState(initial = "")
+                val hasSeenOnboarding by appPrefs.hasSeenOnboarding.collectAsState(initial = null)
 
                 val notificationPermissionLauncher = rememberLauncherForActivityResult(RequestPermission()) {}
                 LaunchedEffect(Unit) {
@@ -64,14 +72,28 @@ class MainActivity : ComponentActivity() {
                     if (serverUrl.isNotBlank()) tapListVm.connectWebSocket(serverUrl)
                 }
 
+                if (hasSeenOnboarding == null) {
+                    Box(modifier = Modifier.fillMaxSize())
+                    return@OpenPlaatoKegTheme
+                }
+
+                val startDestination = if (hasSeenOnboarding == true) Screen.TapList.route else Screen.Onboarding.route
+
                 Scaffold(
                     bottomBar = { BottomNavBar(navController) }
                 ) { innerPadding ->
                     NavHost(
                         navController = navController,
-                        startDestination = Screen.TapList.route,
+                        startDestination = startDestination,
                         modifier = Modifier.padding(innerPadding),
                     ) {
+                        composable(Screen.Onboarding.route) {
+                            OnboardingScreen(onFinish = {
+                                navController.navigate(Screen.TapList.route) {
+                                    popUpTo(0) { inclusive = true }
+                                }
+                            })
+                        }
                         composable(Screen.TapList.route) {
                             TapListScreen(
                                 viewModel = tapListVm,
@@ -114,6 +136,7 @@ class MainActivity : ComponentActivity() {
                             SettingsScreen(
                                 onSetupAirlocks = { navController.navigate(Screen.AirlockSetup.route) },
                                 onBrowseBrewfatherBatches = { navController.navigate(Screen.BrewfatherBatches.route) },
+                                onOpenGuide = { navController.navigate(Screen.Onboarding.route) },
                             )
                         }
 
