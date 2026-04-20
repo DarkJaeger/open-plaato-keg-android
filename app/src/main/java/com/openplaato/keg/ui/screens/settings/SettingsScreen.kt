@@ -45,6 +45,7 @@ import com.openplaato.keg.ui.theme.OnSurfaceMuted
 fun SettingsScreen(
     onSetupAirlocks: () -> Unit = {},
     onBrowseBrewfatherBatches: () -> Unit = {},
+    onOpenGuide: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
@@ -112,6 +113,10 @@ fun SettingsScreen(
                 onClick = { keyboard?.hide(); viewModel.refreshServerVersion() },
                 modifier = Modifier.fillMaxWidth(),
             ) { Text("Refresh Version", fontWeight = FontWeight.Medium) }
+            OutlinedButton(
+                onClick = onOpenGuide,
+                modifier = Modifier.fillMaxWidth(),
+            ) { Text("Setup Guide", fontWeight = FontWeight.Medium) }
 
             Spacer(Modifier.height(8.dp))
 

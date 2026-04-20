@@ -24,6 +24,7 @@ class AppPreferences @Inject constructor(
     // Ordered list of keg IDs — stored as a comma-separated string to preserve insertion order.
     // StringSet prefs have no guaranteed order, so we encode as CSV ourselves.
     private val kegOrderKey = stringPreferencesKey("keg_order")
+    private val hasSeenOnboardingKey = booleanPreferencesKey("has_seen_onboarding")
 
     val serverUrl: Flow<String> = context.dataStore.data.map { prefs ->
         prefs[serverUrlKey] ?: ""
@@ -51,6 +52,14 @@ class AppPreferences @Inject constructor(
             ?.split(",")
             ?.filter { it.isNotBlank() }
             ?: emptyList()
+    }
+
+    val hasSeenOnboarding: Flow<Boolean> = context.dataStore.data.map { prefs ->
+        prefs[hasSeenOnboardingKey] ?: false
+    }
+
+    suspend fun setHasSeenOnboarding(seen: Boolean) {
+        context.dataStore.edit { prefs -> prefs[hasSeenOnboardingKey] = seen }
     }
 
     /** Persists the full ordered list of keg IDs. */

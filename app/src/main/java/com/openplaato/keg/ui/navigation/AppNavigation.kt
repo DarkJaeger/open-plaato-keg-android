@@ -49,6 +49,7 @@ sealed class Screen(val route: String, val label: String, val icon: ImageVector)
         fun route(scaleId: String) = "transferscaleconfig/$scaleId"
         const val ARG = "scaleId"
     }
+    data object Onboarding : Screen("onboarding", "Setup Guide", Icons.Default.Settings)
 }
 
 val bottomNavScreens = listOf(
