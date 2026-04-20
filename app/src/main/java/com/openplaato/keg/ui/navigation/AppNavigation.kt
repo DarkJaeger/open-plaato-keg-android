@@ -50,6 +50,12 @@ sealed class Screen(val route: String, val label: String, val icon: ImageVector)
         const val ARG = "scaleId"
     }
     data object Onboarding : Screen("onboarding", "Setup Guide", Icons.Default.Settings)
+    data object History : Screen("history/{id}/{type}/{title}", "History", Icons.Default.LocalBar) {
+        fun route(id: String, type: String, title: String) = "history/$id/$type/$title"
+        const val ID_ARG = "id"
+        const val TYPE_ARG = "type"
+        const val TITLE_ARG = "title"
+    }
 }
 
 val bottomNavScreens = listOf(

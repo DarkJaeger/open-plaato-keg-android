@@ -1,6 +1,7 @@
 package com.openplaato.keg.ui.screens.scales
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,6 +39,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -55,6 +64,7 @@ import sh.calvin.reorderable.rememberReorderableLazyListState
 @Composable
 fun ScalesScreen(
     onConfigureScale: (String) -> Unit,
+    onShowHistory: (String, String) -> Unit,
     viewModel: ScalesViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -97,6 +107,7 @@ fun ScalesScreen(
                         kegs = state.kegs,
                         onMove = { from, to -> viewModel.moveKeg(from, to) },
                         onConfigure = onConfigureScale,
+                        onShowHistory = onShowHistory,
                     )
                 }
             }
@@ -109,6 +120,7 @@ private fun ReorderableScaleList(
     kegs: List<Keg>,
     onMove: (from: Int, to: Int) -> Unit,
     onConfigure: (String) -> Unit,
+    onShowHistory: (String, String) -> Unit,
 ) {
     val listState = rememberLazyListState()
     val reorderState = rememberReorderableLazyListState(listState) { from, to ->
@@ -126,6 +138,10 @@ private fun ReorderableScaleList(
                 ScaleCard(
                     keg = keg,
                     onConfigure = { onConfigure(keg.id) },
+                    onShowHistory = { 
+                        val label = keg.my_label?.takeIf { it.isNotBlank() } ?: keg.id
+                        onShowHistory(keg.id, label)
+                    },
                     // Pass the drag handle modifier so only the handle icon initiates dragging.
                     dragHandleModifier = Modifier.draggableHandle(),
                     isDragging = isDragging,
@@ -139,6 +155,7 @@ private fun ReorderableScaleList(
 fun ScaleCard(
     keg: Keg,
     onConfigure: () -> Unit,
+    onShowHistory: () -> Unit,
     dragHandleModifier: Modifier = Modifier,
     isDragging: Boolean = false,
 ) {
@@ -149,13 +166,24 @@ fun ScaleCard(
     val isPouring = keg.is_pouring?.let { it != "0" && it.isNotBlank() } ?: false
     val isLow = pct in 0.01..19.99
     val unitLabel = if (keg.unit == "2") "US" else "Metric"
-    val modeLabel = if (keg.keg_mode == "2") "CO₂" else "Beer"
+    val isCo2Mode = when (keg.keg_mode) {
+        "2" -> true
+        "1" -> false
+        else -> {
+            // Heuristics for older firmware or if mode isn't explicitly set
+            keg.my_label?.contains("CO2", ignoreCase = true) == true ||
+            keg.beer_left_unit?.contains("CO2", ignoreCase = true) == true ||
+            (keg.amount_left ?: 0.0) < -0.1 // CO2 scales often show negative weight if not tared correctly but labeled
+        }
+    }
+    val modeLabel = if (isCo2Mode) "CO₂" else "Beer"
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .background(CardBackground)
+            .clickable { onShowHistory() }
             .padding(horizontal = 20.dp, vertical = 16.dp),
     ) {
         Column {
@@ -164,8 +192,6 @@ fun ScaleCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                // Drag handle — leftmost. draggableHandle() must be applied here inside
-                // the ReorderableItem scope (passed in as dragHandleModifier).
                 IconButton(
                     onClick = {},
                     modifier = dragHandleModifier.size(36.dp),
@@ -186,7 +212,7 @@ fun ScaleCard(
                         modifier = Modifier.padding(top = 2.dp),
                     ) {
                         Pill(unitLabel)
-                        Pill(modeLabel)
+                        Pill(modeLabel, color = if (isCo2Mode) PouringGreen else null)
                         keg.sensitivity?.let { s ->
                             val sens = when (s) { "1" -> "Very Low"; "2" -> "Low"; "3" -> "Medium"; "4" -> "High"; else -> null }
                             sens?.let { Pill(it) }
@@ -215,48 +241,174 @@ fun ScaleCard(
 
             Spacer(Modifier.height(12.dp))
 
-            Row(verticalAlignment = Alignment.Bottom) {
+            if (isCo2Mode) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Co2BottleVisual(
+                        percent = pct.toFloat(),
+                        modifier = Modifier.size(width = 60.dp, height = 100.dp)
+                    )
+                    
+                    Spacer(Modifier.width(24.dp))
+                    
+                    Column {
+                        Row(verticalAlignment = Alignment.Bottom) {
+                            Text(
+                                "%.1f".format(pct),
+                                fontSize = 32.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Amber500,
+                                lineHeight = 34.sp,
+                            )
+                            Spacer(Modifier.width(4.dp))
+                            Text(
+                                "% CO₂ REMAINING",
+                                style = MaterialTheme.typography.titleSmall,
+                                color = OnSurfaceMuted,
+                                modifier = Modifier.padding(bottom = 4.dp),
+                            )
+                        }
+
+                        Text(
+                            "${"%.2f".format(amount)} $volumeUnit",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = OnSurfaceMuted,
+                        )
+                    }
+                }
+            } else {
+                Row(verticalAlignment = Alignment.Bottom) {
+                    Text(
+                        "%.1f".format(pct),
+                        fontSize = 36.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Amber500,
+                        lineHeight = 38.sp,
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        "%",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = OnSurfaceMuted,
+                        modifier = Modifier.padding(bottom = 4.dp),
+                    )
+                }
+
                 Text(
-                    "%.2f".format(amount),
-                    fontSize = 36.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Amber500,
-                    lineHeight = 38.sp,
-                )
-                Spacer(Modifier.width(6.dp))
-                Text(
-                    volumeUnit,
-                    style = MaterialTheme.typography.titleMedium,
+                    "${"%.2f".format(amount)} $volumeUnit",
+                    style = MaterialTheme.typography.bodyLarge,
                     color = OnSurfaceMuted,
-                    modifier = Modifier.padding(bottom = 4.dp),
+                )
+
+                Spacer(Modifier.height(8.dp))
+                LinearProgressIndicator(
+                    progress = { (pct / 100.0).toFloat() },
+                    modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)),
+                    color = if (isLow) LowRed else Amber500,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
                 )
             }
-
-            Spacer(Modifier.height(8.dp))
-            LinearProgressIndicator(
-                progress = { (pct / 100.0).toFloat() },
-                modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)),
-                color = if (isLow) LowRed else Amber500,
-                trackColor = MaterialTheme.colorScheme.surfaceVariant,
-            )
-            Spacer(Modifier.height(4.dp))
-            Text(
-                "${"%.1f".format(pct)}% remaining",
-                style = MaterialTheme.typography.bodyMedium,
-                color = if (isLow) LowRed else OnSurfaceMuted,
-            )
         }
     }
 }
 
 @Composable
-private fun Pill(text: String) {
+fun Co2BottleVisual(
+    percent: Float,
+    modifier: Modifier = Modifier
+) {
+    val strokeColor = PouringGreen.copy(alpha = 0.8f)
+    val fillColor = if (percent < 20f) LowRed else PouringGreen.copy(alpha = 0.3f)
+
+    Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+        val strokeWidth = 1.5.dp.toPx()
+        
+        // Define the bottle path (matching the reference image shape better)
+        val bottlePath = Path().apply {
+            val corner = 8.dp.toPx()
+            val shoulderY = h * 0.35f
+            val neckW = w * 0.25f
+            val capH = h * 0.08f
+            
+            // Start from bottom left corner
+            moveTo(w * 0.15f + corner, h * 0.95f)
+            // Bottom edge
+            lineTo(w * 0.85f - corner, h * 0.95f)
+            // Bottom right corner
+            quadraticTo(w * 0.85f, h * 0.95f, w * 0.85f, h * 0.95f - corner)
+            // Right side up to shoulder
+            lineTo(w * 0.85f, shoulderY + corner)
+            // Right shoulder
+            quadraticTo(w * 0.85f, shoulderY, w * 0.85f - corner, shoulderY - corner * 0.5f)
+            // To neck
+            lineTo(w / 2 + neckW / 2, h * 0.2f)
+            // Neck up
+            lineTo(w / 2 + neckW / 2, capH)
+            // Cap top
+            lineTo(w / 2 - neckW / 2, capH)
+            // Neck down
+            lineTo(w / 2 - neckW / 2, h * 0.2f)
+            // To left shoulder
+            lineTo(w * 0.15f + corner, shoulderY - corner * 0.5f)
+            // Left shoulder
+            quadraticTo(w * 0.15f, shoulderY, w * 0.15f, shoulderY + corner)
+            // Left side down
+            lineTo(w * 0.15f, h * 0.95f - corner)
+            // Bottom left corner
+            quadraticTo(w * 0.15f, h * 0.95f, w * 0.15f + corner, h * 0.95f)
+            close()
+        }
+
+        // Draw fill (inside out)
+        clipPath(bottlePath) {
+            val usableHeight = h * 0.85f
+            val fillHeight = usableHeight * (percent / 100f)
+            drawRect(
+                color = fillColor,
+                topLeft = Offset(0f, h * 0.95f - fillHeight),
+                size = Size(w, fillHeight)
+            )
+        }
+
+        // Draw outline
+        drawPath(
+            path = bottlePath,
+            color = strokeColor,
+            style = Stroke(width = strokeWidth)
+        )
+        
+        // Draw cap
+        val neckW = w * 0.25f
+        val capH = h * 0.08f
+        drawRoundRect(
+            color = OnSurfaceMuted.copy(alpha = 0.6f),
+            topLeft = Offset(w / 2 - (neckW * 0.6f), 0f),
+            size = Size(neckW * 1.2f, capH * 1.2f),
+            cornerRadius = CornerRadius(2.dp.toPx(), 2.dp.toPx())
+        )
+    }
+}
+
+@Composable
+private fun Pill(text: String, color: androidx.compose.ui.graphics.Color? = null) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(4.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .background(color?.copy(alpha = 0.2f) ?: MaterialTheme.colorScheme.surfaceVariant)
             .padding(horizontal = 6.dp, vertical = 2.dp),
     ) {
-        Text(text, style = MaterialTheme.typography.labelLarge, color = OnSurfaceMuted)
+        Text(
+            text, 
+            style = MaterialTheme.typography.labelLarge, 
+            color = color ?: OnSurfaceMuted,
+            fontWeight = if (color != null) FontWeight.Bold else FontWeight.Normal
+        )
     }
 }

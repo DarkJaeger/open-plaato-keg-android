@@ -75,10 +75,10 @@ class ScalesViewModel @Inject constructor(
                     _uiState.update { state ->
                         val idx = state.kegs.indexOfFirst { it.id == event.keg.id }
                         val updated = if (idx >= 0) {
-                            // Update the keg data in-place so the user's custom order is preserved.
-                            state.kegs.toMutableList().also { it[idx] = event.keg }
+                            // merge() picks up keg_mode_c02_beer from the WS payload
+                            // (now correctly parsed via @SerialName in Keg.kt).
+                            state.kegs.toMutableList().also { it[idx] = it[idx].merge(event.keg) }
                         } else {
-                            // New keg from WebSocket — append to end (will be sorted to end on next load too).
                             state.kegs + event.keg
                         }
                         state.copy(kegs = updated)

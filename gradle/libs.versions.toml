@@ -1,5 +1,5 @@
 [versions]
-agp = "9.1.0"
+agp = "9.1.1"
 kotlin = "2.2.10"
 composeBom = "2026.03.01"
 hilt = "2.59.2"
@@ -17,6 +17,7 @@ coreKtx = "1.18.0"
 material = "1.13.0"
 coil = "3.4.0"
 reorderable = "3.0.0"
+vico = "2.1.0"
 
 [libraries]
 # Core
@@ -63,6 +64,11 @@ coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version
 
 # Reorderable
 reorderable = { group = "sh.calvin.reorderable", name = "reorderable", version.ref = "reorderable" }
+
+# Vico (Charts)
+vico-compose = { group = "com.patrykandpatrick.vico", name = "compose", version.ref = "vico" }
+vico-compose-m3 = { group = "com.patrykandpatrick.vico", name = "compose-m3", version.ref = "vico" }
+vico-core = { group = "com.patrykandpatrick.vico", name = "core", version.ref = "vico" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
