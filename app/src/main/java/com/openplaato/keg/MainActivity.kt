@@ -29,6 +29,7 @@ import com.openplaato.keg.ui.screens.transfer.TransferScaleConfigScreen
 import com.openplaato.keg.ui.screens.airlocks.AirlockSetupScreen
 import com.openplaato.keg.ui.screens.beverages.BeverageEditScreen
 import com.openplaato.keg.ui.screens.beverages.BeveragesScreen
+import com.openplaato.keg.ui.screens.history.HistoryScreen
 import com.openplaato.keg.ui.screens.scales.ScaleConfigScreen
 import com.openplaato.keg.ui.screens.scales.ScalesScreen
 import com.openplaato.keg.ui.screens.settings.BrewfatherBatchScreen
@@ -42,6 +43,7 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        setTheme(R.style.Theme_OpenPlaatoKeg)
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
@@ -82,10 +84,18 @@ class MainActivity : ComponentActivity() {
                                 onConfigureScale = { kegId ->
                                     navController.navigate(Screen.ScaleConfig.route(kegId))
                                 },
+                                onShowHistory = { id, title ->
+                                    navController.navigate(Screen.History.route(id, "keg", title))
+                                }
                             )
                         }
                         composable(Screen.Airlocks.route) {
-                            AirlocksScreen(wsEvents = tapListVm.wsEvents)
+                            AirlocksScreen(
+                                wsEvents = tapListVm.wsEvents,
+                                onShowHistory = { id, title ->
+                                    navController.navigate(Screen.History.route(id, "airlock", title))
+                                }
+                            )
                         }
                         composable(Screen.Transfer.route) {
                             TransferScreen(
@@ -145,6 +155,19 @@ class MainActivity : ComponentActivity() {
                             arguments = listOf(navArgument(Screen.TransferScaleConfig.ARG) { type = NavType.StringType }),
                         ) {
                             TransferScaleConfigScreen(onBack = { navController.popBackStack() })
+                        }
+                        composable(
+                            route = Screen.History.route,
+                            arguments = listOf(
+                                navArgument(Screen.History.ID_ARG) { type = NavType.StringType },
+                                navArgument(Screen.History.TYPE_ARG) { type = NavType.StringType },
+                                navArgument(Screen.History.TITLE_ARG) { type = NavType.StringType },
+                            ),
+                        ) { backStack ->
+                            val id = backStack.arguments?.getString(Screen.History.ID_ARG) ?: ""
+                            val type = backStack.arguments?.getString(Screen.History.TYPE_ARG) ?: ""
+                            val title = backStack.arguments?.getString(Screen.History.TITLE_ARG) ?: ""
+                            HistoryScreen(title = title, id = id, type = type, onBack = { navController.popBackStack() })
                         }
                     }
                 }

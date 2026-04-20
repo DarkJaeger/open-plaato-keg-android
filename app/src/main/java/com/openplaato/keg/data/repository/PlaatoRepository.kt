@@ -111,8 +111,9 @@ class PlaatoRepository @Inject constructor(
         val bytes = stream.use { it.readBytes() }
         val mimeType = context.contentResolver.getType(uri) ?: "image/jpeg"
         val ext = when (mimeType) { "image/png" -> "png"; "image/webp" -> "webp"; else -> "jpg" }
+        val filename = "handle_${System.currentTimeMillis()}.$ext"
         val part = MultipartBody.Part.createFormData(
-            "file", "handle.$ext", bytes.toRequestBody(mimeType.toMediaType())
+            "file", filename, bytes.toRequestBody(mimeType.toMediaType())
         )
         api.uploadTapHandle(part)
     }
@@ -133,6 +134,10 @@ class PlaatoRepository @Inject constructor(
     suspend fun calibrateKnownWeight(id: String, value: String) = runCatching { api.calibrateKnownWeight(id, ValueBody(value)) }
     suspend fun setTemperatureOffset(id: String, value: String) = runCatching { api.setTemperatureOffset(id, ValueBody(value)) }
     suspend fun resetLastPour(kegId: String) = runCatching { api.resetLastPour(kegId) }
+
+    suspend fun getKegHistory(id: String, range: String = "24h") = runCatching {
+        api.getKegHistory(id, range)
+    }
 
     // App config
     suspend fun getAppConfig() = runCatching { api.getAppConfig() }

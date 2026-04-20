@@ -49,6 +49,12 @@ sealed class Screen(val route: String, val label: String, val icon: ImageVector)
         fun route(scaleId: String) = "transferscaleconfig/$scaleId"
         const val ARG = "scaleId"
     }
+    data object History : Screen("history/{id}/{type}/{title}", "History", Icons.Default.LocalBar) {
+        fun route(id: String, type: String, title: String) = "history/$id/$type/$title"
+        const val ID_ARG = "id"
+        const val TYPE_ARG = "type"
+        const val TITLE_ARG = "title"
+    }
 }
 
 val bottomNavScreens = listOf(

@@ -18,10 +18,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -34,6 +37,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -49,6 +53,15 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.openplaato.keg.ui.theme.Amber500
 import com.openplaato.keg.ui.theme.CardBackground
 import com.openplaato.keg.ui.theme.OnSurfaceMuted
+import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
+import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
+import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
+import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
+import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
+import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
+import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
+import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
+import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,6 +71,18 @@ fun ScaleConfigScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val keg = state.keg
+    val modelProducer = remember { CartesianChartModelProducer() }
+
+    LaunchedEffect(state.history) {
+        val history = state.history.mapNotNull { it.amount_left }
+        if (history.isNotEmpty()) {
+            modelProducer.runTransaction {
+                lineSeries {
+                    series(history)
+                }
+            }
+        }
+    }
 
     var showTareDialog by remember { mutableStateOf(false) }
     var showEmptyKegDialog by remember { mutableStateOf(false) }
@@ -94,6 +119,66 @@ fun ScaleConfigScreen(
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
+
+            // ── History graph ──────────────────────────────────────────
+            item {
+                SectionCard(
+                    title = "History",
+                    trailing = {
+                        val ranges = listOf("1h", "6h", "24h", "7d", "30d")
+                        var expanded by remember { mutableStateOf(false) }
+
+                        Box {
+                            TextButton(
+                                onClick = { expanded = true },
+                                contentPadding = PaddingValues(horizontal = 8.dp),
+                                modifier = Modifier.height(32.dp)
+                            ) {
+                                Text(state.currentRange, style = MaterialTheme.typography.labelLarge, color = Amber500)
+                                Icon(
+                                    Icons.Default.ArrowDropDown,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(20.dp),
+                                    tint = Amber500
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = expanded,
+                                onDismissRequest = { expanded = false }
+                            ) {
+                                ranges.forEach { r ->
+                                    DropdownMenuItem(
+                                        text = { Text(r) },
+                                        onClick = {
+                                            expanded = false
+                                            viewModel.loadHistory(r)
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                ) {
+                    if (state.history.isEmpty()) {
+                        Box(
+                            modifier = Modifier.fillMaxWidth().height(200.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("No history data available", color = OnSurfaceMuted)
+                        }
+                    } else {
+                        CartesianChartHost(
+                            chart = rememberCartesianChart(
+                                rememberLineCartesianLayer(),
+                                startAxis = VerticalAxis.rememberStart(),
+                                bottomAxis = HorizontalAxis.rememberBottom(),
+                            ),
+                            modelProducer = modelProducer,
+                            modifier = Modifier.fillMaxWidth().height(200.dp)
+                        )
+                    }
+                }
+            }
 
             // ── Live readings ──────────────────────────────────────────
             item {
@@ -133,9 +218,18 @@ fun ScaleConfigScreen(
             // ── Keg mode ───────────────────────────────────────────────
             item {
                 SectionCard(title = "Keg Mode") {
+                    val isCo2Mode = when (keg?.keg_mode) {
+                        "2" -> true
+                        "1" -> false
+                        else -> {
+                            keg?.my_label?.contains("CO2", ignoreCase = true) == true ||
+                            keg?.beer_left_unit?.contains("CO2", ignoreCase = true) == true ||
+                            (keg?.amount_left ?: 0.0) < -0.1
+                        }
+                    }
                     ToggleRow(
                         options = listOf("Beer" to "beer", "CO₂" to "co2"),
-                        selected = if (keg?.keg_mode == "2") "co2" else "beer",
+                        selected = if (isCo2Mode) "co2" else "beer",
                         onSelect = { viewModel.setKegMode(it) },
                     )
                 }
@@ -290,19 +384,30 @@ fun ScaleConfigScreen(
 // ── Shared composables ─────────────────────────────────────────────────────
 
 @Composable
-private fun SectionCard(title: String, content: @Composable () -> Unit) {
+private fun SectionCard(
+    title: String,
+    trailing: @Composable (() -> Unit)? = null,
+    content: @Composable () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(CardBackground, RoundedCornerShape(16.dp))
             .padding(horizontal = 16.dp, vertical = 14.dp),
     ) {
-        Text(
-            title,
-            style = MaterialTheme.typography.labelLarge,
-            color = Amber500,
-            modifier = Modifier.padding(bottom = 10.dp),
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                title,
+                style = MaterialTheme.typography.labelLarge,
+                color = Amber500,
+            )
+            trailing?.invoke()
+        }
+        Spacer(Modifier.height(10.dp))
         content()
     }
 }
@@ -334,7 +439,7 @@ private fun ToggleRow(
             val isSelected = selected == value
             if (isSelected) {
                 Button(
-                    onClick = {},
+                    onClick = { onSelect(value) },
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColors(containerColor = Amber500, contentColor = Color.Black),
                     contentPadding = PaddingValues(vertical = 8.dp),

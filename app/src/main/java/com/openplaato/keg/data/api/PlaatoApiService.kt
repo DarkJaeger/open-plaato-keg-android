@@ -3,6 +3,7 @@ package com.openplaato.keg.data.api
 import com.openplaato.keg.data.model.AirlockEnabledBody
 import com.openplaato.keg.data.model.TransferScale
 import com.openplaato.keg.data.model.TransferScaleConfigBody
+import com.openplaato.keg.data.model.AirlockHistoryEntry
 import com.openplaato.keg.data.model.AppConfigResponse
 import com.openplaato.keg.data.model.BrewfatherBatch
 import com.openplaato.keg.data.model.BrewfatherBody
@@ -12,6 +13,7 @@ import com.openplaato.keg.data.model.GrainfatherBody
 import com.openplaato.keg.data.model.Airlock
 import com.openplaato.keg.data.model.Beverage
 import com.openplaato.keg.data.model.Keg
+import com.openplaato.keg.data.model.KegHistoryEntry
 import com.openplaato.keg.data.model.StatusResponse
 import com.openplaato.keg.data.model.Tap
 import com.openplaato.keg.data.model.TapHandleUploadResponse
@@ -24,6 +26,7 @@ import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.Part
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface PlaatoApiService {
 
@@ -51,6 +54,9 @@ interface PlaatoApiService {
     // Kegs (live data)
     @GET("api/kegs")
     suspend fun getKegs(): List<Keg>
+
+    @GET("api/kegs/{id}")
+    suspend fun getKeg(@Path("id") id: String): Keg
 
     // Scale commands
     @POST("api/kegs/{id}/unit")
@@ -92,6 +98,12 @@ interface PlaatoApiService {
     @POST("api/kegs/{id}/reset-last-pour")
     suspend fun resetLastPour(@Path("id") id: String): StatusResponse
 
+    @GET("api/kegs/{id}/log")
+    suspend fun getKegHistory(
+        @Path("id") id: String,
+        @Query("range") range: String = "24h"
+    ): List<KegHistoryEntry>
+
     // App config
     @GET("api/config")
     suspend fun getAppConfig(): AppConfigResponse
@@ -124,6 +136,12 @@ interface PlaatoApiService {
 
     @POST("api/airlocks/{id}/brewfather")
     suspend fun setBrewfather(@Path("id") id: String, @Body body: BrewfatherBody): StatusResponse
+
+    @GET("api/airlocks/{id}/log")
+    suspend fun getAirlockHistory(
+        @Path("id") id: String,
+        @Query("range") range: String = "24h"
+    ): List<AirlockHistoryEntry>
 
     // Beverages
     @GET("api/beverages")

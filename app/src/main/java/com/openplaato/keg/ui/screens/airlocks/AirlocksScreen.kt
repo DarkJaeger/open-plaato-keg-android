@@ -1,6 +1,7 @@
 package com.openplaato.keg.ui.screens.airlocks
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -47,6 +48,7 @@ import kotlinx.coroutines.flow.SharedFlow
 @Composable
 fun AirlocksScreen(
     wsEvents: SharedFlow<WsEvent>,
+    onShowHistory: (String, String) -> Unit,
     viewModel: AirlocksViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -109,7 +111,10 @@ fun AirlocksScreen(
                         contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
                     ) {
                         items(state.airlocks, key = { it.id }) { airlock ->
-                            AirlockCard(airlock)
+                            AirlockCard(
+                                airlock = airlock,
+                                onClick = { onShowHistory(airlock.id, airlock.displayName) }
+                            )
                         }
                     }
                 }
@@ -119,12 +124,16 @@ fun AirlocksScreen(
 }
 
 @Composable
-private fun AirlockCard(airlock: Airlock) {
+private fun AirlockCard(
+    airlock: Airlock,
+    onClick: () -> Unit,
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .background(CardBackground)
+            .clickable { onClick() }
             .padding(horizontal = 20.dp, vertical = 16.dp),
     ) {
         Column {

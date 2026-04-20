@@ -219,6 +219,16 @@ fun TapCard(item: TapWithKeg, serverUrl: String = "", onEdit: () -> Unit) {
                             modifier = Modifier.padding(top = 2.dp),
                         )
                     }
+
+                    tap.description?.takeIf { it.isNotBlank() }?.let { desc ->
+                        Text(
+                            text = desc,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = OnSurfaceMuted.copy(alpha = 0.8f),
+                            modifier = Modifier.padding(top = 4.dp),
+                            maxLines = 2,
+                        )
+                    }
                 }
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -250,25 +260,33 @@ fun TapCard(item: TapWithKeg, serverUrl: String = "", onEdit: () -> Unit) {
             if (hasKeg) {
                 Spacer(Modifier.height(12.dp))
 
-                // Volume
+                // Percent and Weight
                 Row(verticalAlignment = Alignment.Bottom) {
-                    Text(
-                        text = "%.2f".format(item.amountLeft),
-                        fontSize = 36.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Amber500,
-                        lineHeight = 38.sp,
-                    )
-                    Spacer(Modifier.width(6.dp))
-                    Text(
-                        text = item.volumeUnit,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = OnSurfaceMuted,
-                        modifier = Modifier.padding(bottom = 4.dp)
-                    )
+                    Column {
+                        Text(
+                            text = "${"%.1f".format(item.percentLeft)}%",
+                            fontSize = 36.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Amber500,
+                            lineHeight = 38.sp,
+                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "%.2f".format(item.amountLeft),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = OnSurfaceMuted,
+                            )
+                            Spacer(Modifier.width(4.dp))
+                            Text(
+                                text = item.volumeUnit,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = OnSurfaceMuted,
+                            )
+                        }
+                    }
                 }
 
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(12.dp))
 
                 // Progress bar
                 val progressColor = if (item.isLow) LowRed else Amber500
@@ -281,12 +299,7 @@ fun TapCard(item: TapWithKeg, serverUrl: String = "", onEdit: () -> Unit) {
                     color = progressColor,
                     trackColor = MaterialTheme.colorScheme.surfaceVariant,
                 )
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    text = "${"%.1f".format(item.percentLeft)}% remaining",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = if (item.isLow) LowRed else OnSurfaceMuted,
-                )
+
 
                 // Last pour
                 if (item.lastPour > 0) {

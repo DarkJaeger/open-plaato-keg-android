@@ -86,4 +86,9 @@ dependencies {
 
     // Reorderable (drag-to-reorder LazyColumn)
     implementation(libs.reorderable)
+
+    // Vico (Charts)
+    implementation(libs.vico.compose)
+    implementation(libs.vico.compose.m3)
+    implementation(libs.vico.core)
 }
